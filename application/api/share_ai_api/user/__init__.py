@@ -1,1 +1,0 @@
-from .user_namespace import api as user_namespace

@@ -1,4 +1,4 @@
-version: '2'
+version: '2.1'
 
 services:
 # web:
@@ -15,7 +15,11 @@ services:
 
  db:
    build: ./database/
-
+   healthcheck:
+     test: ["CMD-SHELL", "pg_isready -U postgres"]
+     interval: 5s
+     timeout: 5s
+     retries: 5
    environment:
      POSTGRES_PASSWORD: password
    expose:
@@ -26,35 +30,37 @@ services:
      - postgres-data:/var/lib/postgresql/data
 
 
-# api:
-#   #restart: always
-#   build: ./application/api
-#   depends_on:
-#     - db
-#   expose:
-#     - "8000"
-#   volumes:
-#     - static-content:/usr/src/app/api/share_ai_api/static
-#     #- session-data:/home/flask/app/ #not needed as we will use client side sessions
-#
-#   #spins up a reverse proxy to assign workers to incoming requests for web resources
-#   command: /usr/local/bin/gunicorn -w 2 -b :8000 share_ai_api:app
-#
-# nginx:
-#   #restart: always
-#   image: share_ai
-#   build: ./nginx
-#   #mem_limit: 256m #set memory limit for nginx so it reclaims memory
-#   ports:
-#     - "80:80"
-#   volumes:
-#     - /www/static
+ api:
+   #restart: always
+   build: ./application/api
+   depends_on:
+     db:
+         condition: service_healthy
+   expose:
+     - "8000"
+   volumes:
+     - static-content:/usr/src/app/api/graphbrain/static
+     #- session-data:/home/flask/app/ #not needed as we will use client side sessions
+
+   #spins up a reverse proxy to assign workers to incoming requests for web resources
+   command: /usr/local/bin/gunicorn -w 2 -b :8000 graphbrain_api:app
+
+
+ nginx:
+   #restart: always
+   image: graphbrain
+   build: ./nginx
+   #mem_limit: 256m #set memory limit for nginx so it reclaims memory
+   ports:
+     - "80:80"
+   volumes:
+     - /www/static
 #   volumes_from:
 #     - web
-#   depends_on:
+   depends_on:
 #     - web
-#     - api
+     - api
 volumes:
   postgres-data: #a volume that stores postgres data
   #session-data: #a volume for storing session data
-#  static-content: #a volume for storing static content such as images
+  static-content: #a volume for storing static content such as images

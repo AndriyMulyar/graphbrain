@@ -12,9 +12,9 @@ def create_app(config_filename=None):
 
     #Creates a pool of database connections for threads to pick up
     app.config['postgreSQL_pool'] = psycopg2.pool.SimpleConnectionPool(1, 20,
-                                                                       user="share_ai_api",
-                                                                       password="supersecretpassword",
-                                                                       host="db", port="5432", database="share_ai")
+                                                                       user="graphbrain_api",
+                                                                       password="BXh&R76Z7ZJvxg:+L#WxVY#ykK[f3C",
+                                                                       host="db", port="5432", database="graphbrain")
     app.register_blueprint(api_v1_blueprint)
     return app
 
