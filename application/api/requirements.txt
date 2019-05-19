@@ -1,8 +1,9 @@
-Flask==1.0.2
 gunicorn==19.9.0
 requests==2.21.0
-Flask-RestPlus==0.12.1
-flask_cors==3.0.7
-psycopg2==2.8
+psycopg2-binary==2.8.2
 requests==2.21.0
 bcrypt==3.1.6
+Flask==1.0.3
+flask_restplus
+flask-cli
+flask_cors

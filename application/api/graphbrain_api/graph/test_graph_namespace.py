@@ -1,27 +1,19 @@
 import unittest, requests
 
-class TestUserNameSpace(unittest.TestCase):
+class TestGraphNameSpace(unittest.TestCase):
 
-    def test_user_login(self):
+    def test_graph_add(self):
 
         data = {
-            'username': 'Andriy',
-            'password': 'andriypassword'
+            'graph6': 'Andriy'
         }
 
-        session = requests.Session()
-
-
-        r = session.post("http://localhost/api/user/%s/login" % data['username'], data=data)
-
-        print(session.cookies.get_dict())
-
-        r = session.post("http://localhost/api/user/%s/logout" % data['username'], data=data)
-
-        print(session.cookies.get_dict())
-
-
-        session.close()
-
+        r = requests.post("http://localhost/api/graph/", data=data)
+        print(r.content)
 
         self.assertEqual(r.status_code, 200)
+
+
+
+if __name__ == '__main__':
+    unittest.main()

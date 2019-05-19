@@ -8,6 +8,22 @@ services:
     environment:
       - FLASK_APP=run.py
       - FLASK_DEBUG=1
+      - SINGULAR_SO=/home/sage/sage/local/lib/libsingular_resources-4.1.1.so
+      - LDFLAGS=-L/home/sage/sage/local/lib -Wl,-rpath,/home/sage/sage/local/lib
+      - LIBRARY_PATH=/home/sage/sage/local/lib:/usr/lib/x86_64-linux-gnu
+      - SAGE_LOCAL=/home/sage/sage/local
+      - SAGE_SPKG_INST=/home/sage/sage/local/var/lib/sage/installed
+      - SINGULARPATH=/home/sage/sage/local/share/singular
+
     volumes:
       - ./application/api/:/home/flask/app/api
-    command: flask run --host=0.0.0.0 --port 8000
+    #command: /home/sage/.local/bin/flask run --host=0.0.0.0 --port 8000
+    #user: sage
+    command: flask run --no-reload --host=0.0.0.0 --port 8000
+    #command: printenv
+
+  #use volume instead of copy during dev
+#  sage:
+#    build: ./application/sage
+#    volumes:
+#      - ./application/sage/:/home/sage/graphbrain/

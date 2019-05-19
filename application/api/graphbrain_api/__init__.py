@@ -22,11 +22,11 @@ app = create_app(config_filename='flask.cfg')
 
 
 #Kills database connections when context dies
-@app.teardown_appcontext
-def close_conn(e):
-    db = g.pop('db', None)
-    if db is not None:
-        app.config['postgreSQL_pool'].putconn(db)
+# @app.teardown_appcontext
+# def close_conn(e):
+#     db = g.pop('db', None)
+#     if db is not None:
+#         app.config['postgreSQL_pool'].putconn(db)
 
 
 

@@ -1,3 +1,4 @@
+from sage.all import *
 from flask_restplus import Namespace, Resource, reqparse
 from psycopg2.extras import RealDictCursor
 from flask import current_app as app, jsonify, session
@@ -9,14 +10,42 @@ api = Namespace('graph', description='Graph related API calls')
 
 
 @api.route('/')
-class UserStatus(Resource):
+class Graph(Resource):
 
     @api.doc('Return status and role of user making API call')
     def get(self):
 
+        # cursor = get_db().cursor(cursor_factory=RealDictCursor)
+        # cursor.execute("select property, count(graph) from public.prop_values GROUP BY property ORDER BY count(graph);")
+        # result = cursor.fetchall()
+        # cursor.close()
+        g = graphs.PetersenGraph()
+        return jsonify({'graph': g.graph6_string()})
+
+    @api.doc('Add a graph to the database')
+    def post(self):
+        parser = reqparse.RequestParser()
+
+        parser.add_argument('graph6', required=True, help="Missing graph6 string")
+
+
+        cursor = get_db().cursor(cursor_factory=RealDictCursor)
+        cursor.execute("select property, count(graph) from public.prop_values GROUP BY property ORDER BY count(graph);")
+        result = cursor.fetchall()
+        cursor.close()
+
+        return jsonify(result)
+
+
+@api.route('/add/<graph>')
+class AddGraph(Resource):
+
+    @api.doc('Add a graph to the database')
+    def get(self, graph):
+
         cursor = get_db().cursor(cursor_factory=RealDictCursor)
         cursor.execute("select property, count(graph) from public.prop_values GROUP BY property;")
-        result = cursor.fetchone()
+        result = cursor.fetchall()
         cursor.close()
 
         return jsonify(result)
