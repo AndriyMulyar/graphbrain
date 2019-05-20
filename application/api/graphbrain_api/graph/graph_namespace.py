@@ -1,257 +1,90 @@
-from sage.all import *
 from flask_restplus import Namespace, Resource, reqparse
 from psycopg2.extras import RealDictCursor
+from psycopg2.errors import UniqueViolation
 from flask import current_app as app, jsonify, session
 import re
 from datetime import datetime
 from ..data import get_db
 import bcrypt
+from sage.all import *
+from sage.graphs.graph_input import from_graph6
+
+
 api = Namespace('graph', description='Graph related API calls')
 
 
-@api.route('/')
+@api.route('/<graph6>')
 class Graph(Resource):
 
-    @api.doc('Return status and role of user making API call')
-    def get(self):
+    @api.doc(responses={400: 'Invalid graph6 string', 404: 'Graph not in database', 200: 'Graph successfully retrieved'})
+    @api.doc('Return canonical graph6 string from database with any computed properties and invariants')
+    def get(self, graph6):
+        """
+        Retrieves a graph from the GraphBrain with computed properties and invariants
+        """
 
-        # cursor = get_db().cursor(cursor_factory=RealDictCursor)
-        # cursor.execute("select property, count(graph) from public.prop_values GROUP BY property ORDER BY count(graph);")
-        # result = cursor.fetchall()
-        # cursor.close()
-        g = graphs.PetersenGraph()
-        return jsonify({'graph': g.graph6_string()})
+        from sage.graphs.graph import Graph
+        G = Graph()
+
+        try:
+            from_graph6(G, str(graph6))
+        except RuntimeError as error:
+            return str(error), 400
+
+        canon_g6 = G.canonical_label(algorithm='sage').graph6_string()
+
+        cursor = get_db().cursor(cursor_factory=RealDictCursor)
+        cursor.execute("select * from graph g where g.graph6 like %s;", (canon_g6,))
+        graph = cursor.fetchone()
+
+        if not graph:
+            return "Graph not in database", 404
+        graph = dict(graph)
+        graph['properties'] = dict()
+        graph['invariants'] = dict()
+
+        #Retrieve properties
+        cursor.execute("select p.property, pv.value from properties p join property_value pv on p.id = pv.property_id where pv.graph_id = 25849;", (graph['id'],))
+        properties = cursor.fetchall()
+        if properties:
+            graph['properties'].update({row['property']: row['value'] for row in properties})
+
+        #Retrieve invariants
+        cursor.execute("select invariant, value from invariants i join invariant_value iv on i.id = iv.invariant_id where iv.graph_id = %s;", (graph['id'],))
+        invariants = cursor.fetchall()
+        if invariants:
+            graph['invariants'].update({row['invariant']: row['value'] for row in invariants})
+
+        cursor.close()
+        return jsonify(graph)
 
     @api.doc('Add a graph to the database')
-    def post(self):
-        parser = reqparse.RequestParser()
+    @api.doc(responses={400: 'Invalid graph6 string',409: 'Graph already in database', 200: 'Graph successfully added'})
+    def put(self, graph6):
+        """
+        Inserts a graph into the GraphBrain
+        """
+        from sage.graphs.graph import Graph
+        G = Graph()
 
-        parser.add_argument('graph6', required=True, help="Missing graph6 string")
+        try:
+            from_graph6(G, str(graph6))
+        except RuntimeError as error:
+            return str(error), 400
+
+        canon_g6 = G.canonical_label(algorithm='sage').graph6_string()
 
 
         cursor = get_db().cursor(cursor_factory=RealDictCursor)
-        cursor.execute("select property, count(graph) from public.prop_values GROUP BY property ORDER BY count(graph);")
+        try:
+            cursor.execute("INSERT INTO public.graph(graph6) VALUES (%s)", (canon_g6,))
+        except UniqueViolation:
+            return 'Graph already exists (canonical sage g6 string): %s' % canon_g6, 409
         result = cursor.fetchall()
         cursor.close()
 
-        return jsonify(result)
+        return jsonify(result), 201
 
-
-@api.route('/add/<graph>')
-class AddGraph(Resource):
-
-    @api.doc('Add a graph to the database')
-    def get(self, graph):
-
-        cursor = get_db().cursor(cursor_factory=RealDictCursor)
-        cursor.execute("select property, count(graph) from public.prop_values GROUP BY property;")
-        result = cursor.fetchall()
-        cursor.close()
-
-        return jsonify(result)
-#
-#
-# @api.route('/<username>')
-# @api.param('username', 'The username')
-# class User(Resource):
-#     @api.doc('Return user')
-#     def get(self, username):
-#         '''Retrieves a User'''
-#
-#         if 'username' in session and session['username'] == 'root' and username == 'root':
-#             return jsonify({'role': 'root'})
-#
-#         cursor = get_db().cursor(cursor_factory=RealDictCursor)
-#         cursor.execute("SELECT *, date_part('year', account.creation_time_stamp) FROM account JOIN user_account on \
-#                        account.username = user_account.username\
-#                        WHERE user_account.username = %s", (username, ))
-#         result = cursor.fetchone()
-#
-#         cursor.execute("""
-#                     select json_agg(row_to_json(oa)) AS organizations from organization_affiliate oa where username = %s """
-#                        , (username, ))
-#
-#         organizations = cursor.fetchone()
-#
-#         cursor.execute("""
-#                 SELECT json_agg(row_to_json(i)) AS invitations FROM invitation i WHERE recipient_username = %s """
-#                        , (username, ))
-#
-#         invitations = cursor.fetchone()
-#
-#         cursor.execute("SELECT ARRAY_AGG(model_name) as owned_models FROM transactions WHERE username = %s", (username,))
-#
-#         models = cursor.fetchone()
-#
-#         if result is None:
-#             return "",404
-#
-#         result = dict(result)
-#         result.update(dict(organizations))
-#         result.update(dict(invitations))
-#
-#         result.update(dict(models))
-#
-#         #handle session
-#         if 'username' in session and session['username'] == username:
-#             result['role'] = 'account_owner'
-#
-#         else:
-#             result['role'] = 'guest'
-#
-#         result.pop('password')
-#         # cursor = get_db().cursor(cursor_factory=RealDictCursor)
-#         # cursor.execute("SELECT * FROM user_account WHERE username = '%s' " % username)
-#         # result = cursor.fetchone()
-#         cursor.close()
-#
-#         return jsonify(result)
-#
-#     @api.doc('Create user')
-#     def post(self, username):
-#         '''Create a User'''
-#
-#         parser = reqparse.RequestParser()
-#
-#         parser.add_argument('username', required=True, help="Username cannot be blank!")
-#         parser.add_argument('password', required=True, help="Password cannot be blank!")
-#         # parser.add_argument('role', required=True, help="Role cannot be blank!")
-#         parser.add_argument('email', required=True, help="Email cannot be blank!")
-#         parser.add_argument('first_name', required=True, help="First name cannot be blank!")
-#         parser.add_argument('last_name', required=True, help="Last name cannot be blank!")
-#         parser.add_argument('country', required=True, help="Country cannot be blank!")
-#         parser.add_argument('state_province', required=True, help="State/province cannot be blank!")
-#         parser.add_argument('city', required=True, help="City cannot be blank!")
-#         parser.add_argument('address', required=True, help="Address cannot be blank!")
-#         args = parser.parse_args()
-#
-#         app.logger.info(args)
-#
-#         password = args['password'].encode('utf8')
-#
-#         hashed = bcrypt.hashpw(password, bcrypt.gensalt())
-#
-#         insertPassword = hashed.decode('utf8')
-#
-#         cursor = get_db().cursor(cursor_factory=RealDictCursor)
-#
-#
-#         insertQuery2 = "INSERT INTO account (username, password, creation_time_stamp, role)\
-#                        VALUES (%s, %s, CURRENT_TIMESTAMP, %s);"
-#
-#         cursor.execute(insertQuery2,  (args['username'], insertPassword, "user"))
-#
-#         insertQuery = "INSERT INTO user_account (username, first_name, last_name, country, state_or_province,\
-#                        city, street_address, email) VALUES (%s, %s, %s, %s, %s, %s, %s, %s);" \
-#
-#
-#         cursor.execute(insertQuery, (args['username'], args['first_name'], args['last_name'], args['country'],
-#                                     args['state_province'],
-#                                     args['city'], args['address'], args['email']))
-#
-#         cursor.execute("COMMIT;")
-#
-#         session['username'] = args['username']
-#
-#         cursor.close()
-#
-#         return 200
-#
-#
-#     @api.doc('Update user')
-#     def put(self, username):
-#         '''Update a User'''
-#
-#         parser = reqparse.RequestParser()
-#
-#         parser.add_argument('first_name', required=True, help="First name cannot be blank!")
-#         parser.add_argument('last_name', required=True, help="Last name cannot be blank!")
-#         parser.add_argument('country', required=True, help="Country cannot be blank!")
-#         parser.add_argument('state_province', required=True, help="State/province cannot be blank!")
-#         parser.add_argument('city', required=True, help="City cannot be blank!")
-#         parser.add_argument('address', required=True, help="Address cannot be blank!")
-#         args = parser.parse_args()
-#
-#         app.logger.info(args)
-#
-#         cursor = get_db().cursor(cursor_factory=RealDictCursor)
-#
-#         insertQuery = "UPDATE user_account SET first_name=%s, last_name=%s, country=%s, state_or_province=%s,\
-#                         city=%s, street_address=%s WHERE username = %s;"
-#
-#         cursor.execute(insertQuery, (args['first_name'], args['last_name'], args['country'], args['state_province'], args['city'], args['address'], username))
-#
-#         cursor.execute("COMMIT;")
-#
-#         cursor.close()
-#
-#         return "", 200
-#
-#
-#
-#
-#
-# @api.route('/<username>/invitation/respond')
-# @api.param('username', 'The username')
-# class UserInvitation(Resource):
-#
-#     @api.doc('responds to users invitation request')
-#     def post(self, username):
-#         parser = reqparse.RequestParser()
-#         parser.add_argument('organization', required=True, help="Organization cannot be blank!")
-#         parser.add_argument('response', required=True, help="response cannot be blank!")
-#         args = parser.parse_args()
-#
-#         cursor = get_db().cursor(cursor_factory=RealDictCursor)
-#
-#         if args['response'] == 'accept':
-#             cursor.execute("INSERT INTO organization_affiliate VALUES (%s, %s, %s)", (username, args['organization'],
-#                                                                                      'member'))
-#
-#         cursor.execute("DELETE FROM invitation WHERE organization = %s AND recipient_username = %s",
-#                        (args['organization'], username))
-#
-#         cursor.execute("COMMIT")
-#
-#         return "",201
-#
-#
-#
-# @api.route('/<username>/login')
-# @api.param('username', 'The username')
-# class UserLogin(Resource):
-#
-#     @api.doc('Logs in user')
-#     def post(self, username):
-#         parser = reqparse.RequestParser()
-#         parser.add_argument('username', required=True, help="Username cannot be blank!")
-#         parser.add_argument('password', required=True, help="Password cannot be blank!")
-#         args = parser.parse_args()
-#
-#         cursor = get_db().cursor(cursor_factory=RealDictCursor)
-#
-#         cursor.execute("SELECT username, password FROM account WHERE username = %s", (args['username'], ))
-#         result = cursor.fetchone()
-#         cursor.close()
-#
-#         if bcrypt.checkpw(args['password'].encode('utf8'), result['password'].encode('utf8')):
-#             session['username'] = result['username']
-#             return "", 200
-#
-#         return "", 301
-#
-# @api.route('/<username>/logout')
-# @api.param('username', 'The username')
-# class UserLogout(Resource):
-#
-#     @api.doc('Logs a user out')
-#     def post(self, username):
-#
-#         if 'username' in session and session['username'] == username:
-#             session.pop('username')
-#             return "",200
-#
-#         return "",406
 
 
 

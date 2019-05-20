@@ -11,8 +11,9 @@ api = Api(blueprint,
           description='An API interfacing the GraphBrain database')
 
 from .graph import graph_namespace
+from .property import property_namespace
 
 api.add_namespace(graph_namespace, path='/graph') #register /user path with it's functionality
-
+api.add_namespace(property_namespace, path='/property') #register /user path with it's functionality
 
 
