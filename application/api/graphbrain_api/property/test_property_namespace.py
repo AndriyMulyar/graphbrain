@@ -5,22 +5,22 @@ class TestPropertyNameSpace(unittest.TestCase):
     def test_get_property(self):
 
         data = {
-            'property': 'test_property',
+            'property': 'has_c4',
         }
 
-        r = requests.put("http://localhost/api/property/"+data['property'], data=data)
+        r = requests.get("http://localhost/api/property/"+data['property'])
 
-        self.assertEqual(r.status_code, 400)
+        self.assertEqual(r.status_code, 200)
 
-    def test_get_fake_property(self):
+    def test_get_not_property(self):
 
         data = {
-            'property': 'test_property',
+            'property': 'empty',
         }
 
-        r = requests.put("http://localhost/api/property/"+data['property'], data=data)
+        r = requests.get("http://localhost/api/property/"+data['property'])
 
-        self.assertEqual(r.status_code, 400)
+        self.assertEqual(r.status_code, 404)
 
 
 

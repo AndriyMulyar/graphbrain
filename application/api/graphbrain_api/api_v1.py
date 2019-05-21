@@ -12,8 +12,10 @@ api = Api(blueprint,
 
 from .graph import graph_namespace
 from .property import property_namespace
+from .invariant import invariant_namespace
 
-api.add_namespace(graph_namespace, path='/graph') #register /user path with it's functionality
-api.add_namespace(property_namespace, path='/property') #register /user path with it's functionality
+api.add_namespace(graph_namespace, path='/graph')
+api.add_namespace(property_namespace, path='/property')
+api.add_namespace(invariant_namespace, path='/invariant')
 
 

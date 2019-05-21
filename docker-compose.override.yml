@@ -14,16 +14,16 @@ services:
       - SAGE_LOCAL=/home/sage/sage/local
       - SAGE_SPKG_INST=/home/sage/sage/local/var/lib/sage/installed
       - SINGULARPATH=/home/sage/sage/local/share/singular
+      - PYTHONPATH="/home/sage/"
 
     volumes:
       - ./application/api/:/home/flask/app/api
     #command: /home/sage/.local/bin/flask run --host=0.0.0.0 --port 8000
     #user: sage
     command: flask run --no-reload --host=0.0.0.0 --port 8000
-    #command: printenv
 
-  #use volume instead of copy during dev
-#  sage:
-#    build: ./application/sage
-#    volumes:
-#      - ./application/sage/:/home/sage/graphbrain/
+  computer:
+
+    volumes:
+      - ./application/computer/:/home/sage/computer
+    command: python -u compute_values.py
