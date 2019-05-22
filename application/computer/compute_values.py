@@ -45,8 +45,8 @@ if __name__ == '__main__':
         needed_properties = set(database_properties).difference(set(computed_properties))
         needed_invariants = set(database_invariants).difference(set(computed_invariants))
 
-        if not needed_properties and not needed_invariants: # no computation needs to be done
-            continue
+        # if not needed_properties and not needed_invariants: # no computation needs to be done
+        #     continue
 
         computation_results = {'id': int(graph_entity['id'])}
         computation_results['properties'] = []
