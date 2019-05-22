@@ -1,11 +1,9 @@
 from flask_restplus import Namespace, Resource, reqparse
 from psycopg2.extras import RealDictCursor
 from psycopg2.errors import UniqueViolation
-from flask import current_app as app, jsonify, session, g
-import re
-from datetime import datetime
+from flask import current_app as app, jsonify, session, g, request
+import re, json
 from ..data import get_db, get_conn
-import bcrypt
 from sage.all import *
 from sage.graphs.graph_input import from_graph6
 
@@ -119,6 +117,29 @@ class GraphComputationPoll(Resource):
                         cursor.execute("UPDATE public.graph set processed_status = 'queued' where processed_status LIKE 'processing';")
                         conn.commit()
             return "Queue Successfully Reset", 200
+
+    def put(self):
+
+        args = json.loads(request.data)
+
+        with get_conn() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                try:
+                    for property, value in args['properties']:
+                        #app.logger.info("Inserting property: %s" % property)
+                        cursor.execute("INSERT INTO property_value(graph_id, property_id, value) VALUES (%s, (select id from properties where property like %s), %s)",
+                                       (args['id'], property, value))
+                    for invariant, value in args['invariants']:
+                        #app.logger.info("Inserting invariant: %s" % invariant)
+                        cursor.execute("INSERT INTO invariant_value(graph_id, invariant_id, value) VALUES (%s, (select id from invariants where invariant like %s), %s)",
+                                       (args['id'], invariant, value))
+                    cursor.execute("UPDATE graph set processed_status='processed' where id = %s", (args['id'],))
+                    conn.commit()
+                except BaseException as error:
+                    print(error)
+        return "Successfully added computation to database", 200
+
+
 
 
 

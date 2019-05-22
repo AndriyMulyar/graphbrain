@@ -12,6 +12,7 @@ RUN ln -s /home/sage/sage/local/lib/libz.so.1 /lib/x86_64-linux-gnu/libz.so.1
 
 USER sage
 ENV PYTHONUSERBASE /home/sage/sage/local
+RUN pip install --user timeout-decorator
 WORKDIR /home/sage/computer
 
 #USER root

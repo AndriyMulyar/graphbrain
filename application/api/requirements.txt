@@ -7,3 +7,4 @@ Flask==1.0.3
 flask_restplus
 flask-cli
 flask_cors
+flask-marshmallow
