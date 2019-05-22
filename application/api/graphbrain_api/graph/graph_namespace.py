@@ -125,14 +125,16 @@ class GraphComputationPoll(Resource):
         with get_conn() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
                 try:
-                    for property, value in args['properties']:
-                        #app.logger.info("Inserting property: %s" % property)
-                        cursor.execute("INSERT INTO property_value(graph_id, property_id, value) VALUES (%s, (select id from properties where property like %s), %s)",
-                                       (args['id'], property, value))
-                    for invariant, value in args['invariants']:
-                        #app.logger.info("Inserting invariant: %s" % invariant)
-                        cursor.execute("INSERT INTO invariant_value(graph_id, invariant_id, value) VALUES (%s, (select id from invariants where invariant like %s), %s)",
-                                       (args['id'], invariant, value))
+                    if args['properties'] or args['invariants']:
+                        cursor.execute("UPDATE graph set processed_status='processed' where id = %s", (args['id'],))
+                        for property, value in args['properties']:
+                            #app.logger.info("Inserting property: %s" % property)
+                            cursor.execute("INSERT INTO property_value(graph_id, property_id, value) VALUES (%s, (select id from properties where property like %s), %s)",
+                                           (args['id'], property, value))
+                        for invariant, value in args['invariants']:
+                            #app.logger.info("Inserting invariant: %s" % invariant)
+                            cursor.execute("INSERT INTO invariant_value(graph_id, invariant_id, value) VALUES (%s, (select id from invariants where invariant like %s), %s)",
+                                           (args['id'], invariant, value))
                     cursor.execute("UPDATE graph set processed_status='processed' where id = %s", (args['id'],))
                     conn.commit()
                 except BaseException as error:
