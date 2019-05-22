@@ -126,7 +126,6 @@ class GraphComputationPoll(Resource):
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
                 try:
                     if args['properties'] or args['invariants']:
-                        cursor.execute("UPDATE graph set processed_status='processed' where id = %s", (args['id'],))
                         for property, value in args['properties']:
                             #app.logger.info("Inserting property: %s" % property)
                             cursor.execute("INSERT INTO property_value(graph_id, property_id, value) VALUES (%s, (select id from properties where property like %s), %s)",
