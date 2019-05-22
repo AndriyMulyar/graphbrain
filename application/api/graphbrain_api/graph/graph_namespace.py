@@ -136,7 +136,7 @@ class GraphComputationPoll(Resource):
                     cursor.execute("UPDATE graph set processed_status='processed' where id = %s", (args['id'],))
                     conn.commit()
                 except BaseException as error:
-                    print(error)
+                    app.logger.info(error)
         return "Successfully added computation to database", 200
 
 
