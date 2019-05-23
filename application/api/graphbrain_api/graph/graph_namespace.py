@@ -101,7 +101,7 @@ class Graph(Resource):
 
 
 #Insure that on start up all processing graphs are set to queued
-@api.route('/poll/')
+@api.route('/poll')
 class GraphComputationPoll(Resource):
 
     @api.doc('Polls a graph for computation')
