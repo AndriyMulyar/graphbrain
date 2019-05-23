@@ -45,7 +45,7 @@ class Graph(Resource):
                 if graph6.isdigit():
                     cursor.execute("select * from graph g where g.id = %s;", (graph6,))
                 else:
-                    cursor.execute("select * from graph g where g.graph6 like %s;", (canon_g6,))
+                    cursor.execute("select * from graph g where g.graph6 = %s;", (canon_g6,))
                 graph = cursor.fetchone()
 
                 if not graph:
