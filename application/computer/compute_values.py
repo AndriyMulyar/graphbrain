@@ -33,7 +33,7 @@ if __name__ == '__main__':
         graph_entity = json.loads(r.content)
 
         #retrieve the polled graph
-        r = requests.get("http://api:8000/api/graph/", data={'graph6': graph_entity['id']})
+        r = requests.post("http://api:8000/api/graph/", data={'graph6': graph_entity['id']})
         property_request = requests.get("http://api:8000/api/property/")
         invariant_request = requests.get("http://api:8000/api/invariant/")
 

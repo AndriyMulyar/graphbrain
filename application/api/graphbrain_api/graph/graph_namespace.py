@@ -16,10 +16,11 @@ class Graph(Resource):
 
     @api.doc(responses={400: 'Invalid graph6 string', 404: 'Graph not in database', 200: 'Graph successfully retrieved'})
     @api.doc('Return canonical graph6 string from database with any computed properties and invariants')
-    def get(self):
+    def post(self):
         """
         Retrieves a graph from the GraphBrain with computed properties and invariants
         """
+
         parser = reqparse.RequestParser()
         parser.add_argument('graph6', required=True,
                             help="Must include if all currently graphs currently marked as processing should be set to queued")
