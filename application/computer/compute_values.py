@@ -21,7 +21,7 @@ def compute_value(callback, graph):
 
 
 if __name__ == '__main__':
-    r = requests.post("http://api:8000/api/graph/", data={'reset_queue':True}) #reset queue of graphs in need of computation
+    r = requests.post("http://api:8000/api/graph/poll", data={'reset_queue':True}) #reset queue of graphs in need of computation
     if r.status_code != 200:
         raise RuntimeError('Could not reset queue on start up')
 
