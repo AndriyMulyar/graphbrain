@@ -142,16 +142,23 @@ class GraphComputationPoll(Resource):
                     if args['properties'] or args['invariants']:
                         for property, value in args['properties']:
                             #app.logger.info("Inserting property: %s" % property)
-                            cursor.execute("INSERT INTO property_value(graph_id, property_id, value) VALUES (%s, (select id from properties where property like %s), %s)",
-                                           (args['id'], property, value))
+                            try:
+                                cursor.execute("INSERT INTO property_value(graph_id, property_id, value) VALUES (%s, (select id from properties where property like %s), %s)  ON CONFLICT (graph_id, property_id) DO UPDATE SET graph_id = excluded.property_id, property_id = excluded.property_id",
+                                               (args['id'], property, value))
+                            except UniqueViolation:
+                                continue
                         for invariant, value in args['invariants']:
                             #app.logger.info("Inserting invariant: %s" % invariant)
-                            cursor.execute("INSERT INTO invariant_value(graph_id, invariant_id, value) VALUES (%s, (select id from invariants where invariant like %s), %s)",
-                                           (args['id'], invariant, value))
+                            try:
+                                cursor.execute("INSERT INTO invariant_value(graph_id, invariant_id, value) VALUES (%s, (select id from invariants where invariant like %s), %s) ON CONFLICT (graph_id, invariant_id) DO UPDATE SET graph_id = excluded.graph_id, invariant_id = excluded.invariant_id",
+                                               (args['id'], invariant, value))
+                            except UniqueViolation:
+                                continue
                     cursor.execute("UPDATE graph set processed_status='processed' where id = %s", (args['id'],))
                     conn.commit()
                 except BaseException as error:
                     app.logger.info(error)
+                    return str(error), 400
         return "Successfully added computation to database", 200
 
 
