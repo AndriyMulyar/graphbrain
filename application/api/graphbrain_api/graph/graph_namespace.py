@@ -11,15 +11,21 @@ from sage.graphs.graph_input import from_graph6
 api = Namespace('graph', description='Graph related API calls')
 
 
-@api.route('/<graph6>')
+@api.route('/')
 class Graph(Resource):
 
     @api.doc(responses={400: 'Invalid graph6 string', 404: 'Graph not in database', 200: 'Graph successfully retrieved'})
     @api.doc('Return canonical graph6 string from database with any computed properties and invariants')
-    def get(self, graph6):
+    def get(self):
         """
         Retrieves a graph from the GraphBrain with computed properties and invariants
         """
+        parser = reqparse.RequestParser()
+        parser.add_argument('graph6', required=True,
+                            help="Must include if all currently graphs currently marked as processing should be set to queued")
+        args = parser.parse_args()
+
+        graph6 = args['graph6']
 
         #secretly accept int's representing graph id's local to the GraphBrain.
         if not graph6.isdigit():
@@ -63,10 +69,17 @@ class Graph(Resource):
 
     @api.doc('Add a graph to the database')
     @api.doc(responses={400: 'Invalid graph6 string',409: 'Graph already in database', 200: 'Graph successfully added'})
-    def put(self, graph6):
+    def put(self):
         """
         Inserts a graph into the GraphBrain
         """
+        parser = reqparse.RequestParser()
+        parser.add_argument('graph6', required=True,
+                            help="Must include if all currently graphs currently marked as processing should be set to queued")
+        args = parser.parse_args()
+
+        graph6 = args['graph6']
+
         from sage.graphs.graph import Graph
         G = Graph()
 
@@ -88,7 +101,7 @@ class Graph(Resource):
 
 
 #Insure that on start up all processing graphs are set to queued
-@api.route('/')
+@api.route('/poll/')
 class GraphComputationPoll(Resource):
 
     @api.doc('Polls a graph for computation')

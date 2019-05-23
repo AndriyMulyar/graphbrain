@@ -27,13 +27,13 @@ if __name__ == '__main__':
 
     while True:
         time.sleep(.1)
-        r = requests.get("http://api:8000/api/graph/")
+        r = requests.get("http://api:8000/api/graph/poll")
         if r.status_code != 200:
             continue
         graph_entity = json.loads(r.content)
 
         #retrieve the polled graph
-        r = requests.get("http://api:8000/api/graph/"+str(graph_entity['id']))
+        r = requests.get("http://api:8000/api/graph/", data={'graph6': graph_entity['id']})
         property_request = requests.get("http://api:8000/api/property/")
         invariant_request = requests.get("http://api:8000/api/invariant/")
 
@@ -69,7 +69,7 @@ if __name__ == '__main__':
                 except BaseException:
                     continue
         try:
-            r = requests.put('http://api:8000/api/graph/', data=json.dumps(computation_results))
+            r = requests.put('http://api:8000/api/graph/poll', data=json.dumps(computation_results))
         except BaseException:
             continue #TODO possible would be better to mark as un-computed in DB
         print(r.content)
