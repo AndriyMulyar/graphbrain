@@ -14,6 +14,17 @@ api = Namespace('graph', description='Graph related API calls')
 @api.route('/')
 class Graph(Resource):
 
+    @api.doc('Retrieves all graphs that have been computationally processed by the GraphBrain. These are ready to be conjectured on.')
+    def get(self):
+        """Retrieves all graphs that have properties and invariants computed"""
+        with get_conn() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("SELECT graph6 from  public.graph where processed_status like 'processed';")
+                result = [row['graph6'] for row in cursor.fetchall()]
+
+        return jsonify(result)
+
+    @api.doc(params={'graph6': 'The graph6 string of the graph you would like to retrieve.'})
     @api.doc(responses={400: 'Invalid graph6 string', 404: 'Graph not in database', 200: 'Graph successfully retrieved'})
     @api.doc('Return canonical graph6 string from database with any computed properties and invariants')
     def post(self):
@@ -68,6 +79,7 @@ class Graph(Resource):
 
         return jsonify(graph)
 
+    @api.doc(params={'graph6': 'A graph6 string to add'})
     @api.doc('Add a graph to the database')
     @api.doc(responses={400: 'Invalid graph6 string',409: 'Graph already in database', 200: 'Graph successfully added'})
     def put(self):

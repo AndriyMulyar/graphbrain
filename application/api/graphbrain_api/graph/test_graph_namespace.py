@@ -8,7 +8,7 @@ class TestGraphNameSpace(unittest.TestCase):
             'graph6': 'Andriy'
         }
 
-        r = requests.put("http://localhost/api/graph/" + data['graph6'], data=data)
+        r = requests.put("http://localhost/api/graph/", data=data)
 
         self.assertEqual(r.status_code, 400)
 
@@ -18,21 +18,27 @@ class TestGraphNameSpace(unittest.TestCase):
             'graph6': 'C~'
         }
 
-        r = requests.put("http://localhost/api/graph/" + data['graph6'] , data=data)
+        r = requests.put("http://localhost/api/graph/" , data=data)
 
         self.assertEqual(r.status_code, 409)
 
 
 
     def test_success_retrieve_graph(self):
+        data = {
+            'graph6': 'C~'
+        }
 
-        r = requests.get("http://localhost/api/graph/"+'C~')
+        r = requests.post("http://localhost/api/graph/", data=data)
         self.assertEqual(r.status_code, 200)
 
     def test_failure_retrieve_graph(self):
+        data = {
+            'graph6': 'not a graph'
+        }
 
-        r = requests.get("http://localhost/api/graph/"+'Bb')
-        self.assertEqual(r.status_code, 404)
+        r = requests.post("http://localhost/api/graph/", data=data)
+        self.assertEqual(r.status_code, 200)
 
 
 
