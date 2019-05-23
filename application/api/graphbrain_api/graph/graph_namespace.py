@@ -95,10 +95,11 @@ class Graph(Resource):
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
                 try:
                     cursor.execute("INSERT INTO public.graph(graph6) VALUES (%s)", (canon_g6,))
+                    conn.commit()
                 except UniqueViolation:
                     return 'Graph already exists (canonical sage g6 string): %s' % canon_g6, 409
 
-        return "Succesfully Added", 201
+        return canon_g6, 201
 
 
 #Insure that on start up all processing graphs are set to queued
