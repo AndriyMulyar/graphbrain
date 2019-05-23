@@ -83,9 +83,8 @@ class Graph(Resource):
                     cursor.execute("INSERT INTO public.graph(graph6) VALUES (%s)", (canon_g6,))
                 except UniqueViolation:
                     return 'Graph already exists (canonical sage g6 string): %s' % canon_g6, 409
-                result = cursor.fetchall()
 
-        return jsonify(result), 201
+        return "Succesfully Added", 201
 
 
 #Insure that on start up all processing graphs are set to queued
