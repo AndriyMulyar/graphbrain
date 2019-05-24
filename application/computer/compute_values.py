@@ -21,21 +21,21 @@ def compute_value(callback, graph):
 
 
 if __name__ == '__main__':
-    r = requests.post("http://api:8000/api/graph/poll", data={'reset_queue':True}) #reset queue of graphs in need of computation
+    r = requests.post("http://206.189.196.27/api/graph/poll", data={'reset_queue':True}) #reset queue of graphs in need of computation
     if r.status_code != 200:
         raise RuntimeError('Could not reset queue on start up')
 
     while True:
         time.sleep(.1)
-        r = requests.get("http://api:8000/api/graph/poll")
+        r = requests.get("http://206.189.196.27/api/graph/poll")
         if r.status_code != 200:
             continue
         graph_entity = json.loads(r.content)
 
         #retrieve the polled graph
-        r = requests.post("http://api:8000/api/graph/", data={'graph6': graph_entity['id']})
-        property_request = requests.get("http://api:8000/api/property/")
-        invariant_request = requests.get("http://api:8000/api/invariant/")
+        r = requests.post("http://206.189.196.27/api/graph/", data={'graph6': graph_entity['id']})
+        property_request = requests.get("http://206.189.196.27/api/property/")
+        invariant_request = requests.get("http://206.189.196.27/api/invariant/")
 
         database_properties = json.loads(property_request.content)['properties']
         database_invariants = json.loads(invariant_request.content)['invariants']
@@ -69,7 +69,7 @@ if __name__ == '__main__':
                 except BaseException:
                     continue
         try:
-            r = requests.put('http://api:8000/api/graph/poll', data=json.dumps(computation_results))
+            r = requests.put('http://206.189.196.27/api/graph/poll', data=json.dumps(computation_results))
         except BaseException:
             continue #TODO possible would be better to mark as un-computed in DB
         print(r.content)
