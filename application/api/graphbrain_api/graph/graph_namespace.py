@@ -155,7 +155,7 @@ class GraphComputationPoll(Resource):
                         for property, value in args['properties']:
                             #app.logger.info("Inserting property: %s" % property)
                             try:
-                                cursor.execute("INSERT INTO property_value(graph_id, property_id, value) VALUES (%s, (select id from properties where property like %s), %s)  ON CONFLICT (graph_id, property_id) DO UPDATE SET graph_id = excluded.property_id, property_id = excluded.property_id",
+                                cursor.execute("INSERT INTO property_value(graph_id, property_id, value) VALUES (%s, (select id from properties where property like %s), %s)  ON CONFLICT (graph_id, property_id) DO UPDATE SET graph_id = excluded.graph_id, property_id = excluded.property_id",
                                                (args['id'], property, value))
                             except UniqueViolation:
                                 continue
